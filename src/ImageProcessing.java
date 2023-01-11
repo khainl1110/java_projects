@@ -3,6 +3,8 @@ import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImageProcessing {
     public static final String SOURCE_FILE = "./resources/many-flowers.jpg";
@@ -10,22 +12,25 @@ public class ImageProcessing {
 
     public static void main(String[] args) throws IOException {
         File inputFile = new File(SOURCE_FILE);
-        Utils.print("Length is " + inputFile.length());
-        Utils.print(inputFile.getCanonicalPath());
+
         BufferedImage originalImage = ImageIO.read(new File(SOURCE_FILE));
         BufferedImage resultImage = new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-        recolorSingleThreaded(originalImage, resultImage);
+        long startTime = System.currentTimeMillis();
+
+        //recolorSingleThreaded(originalImage, resultImage);
+        int numberOfThreads = 5;
+        recolorMultithreaded(originalImage, resultImage, numberOfThreads);
+
+        long endTime = System.currentTimeMillis();
+
+        long duration = endTime - startTime;
 
         File outputFile = new File(DESTINATION_FILE);
         Utils.print("Output path is " + outputFile.getCanonicalPath());
-        boolean check = ImageIO.write(resultImage, "jpg", outputFile);
+        ImageIO.write(resultImage, "jpg", outputFile);
 
-        Utils.print("Result of write " + check);
-//        JFrame jFrame = new JFrame();
-//        jFrame.setSize(500, 500);
-//        jFrame.setIconImage(originalImage);
-//        jFrame.show();
+        Utils.print("Duration is " + duration);
 
     }
 
@@ -33,6 +38,37 @@ public class ImageProcessing {
         recolorImage(originalImage, resultImage, 0, 0, originalImage.getWidth(), originalImage.getHeight());
     }
 
+    public static void recolorMultithreaded(BufferedImage originalImage, BufferedImage resultImage, int numberOfThreads) {
+        List<Thread> threads = new ArrayList<>();
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight() / numberOfThreads;
+
+        for(int i = 0; i < numberOfThreads; i++) {
+            final int threadMultiplier = i;
+
+            Thread thread = new Thread(() -> {
+                int leftCorner = 0;
+                int topCorner = height * threadMultiplier;
+
+                recolorImage(originalImage, resultImage, leftCorner, topCorner, width, height);
+            });
+
+            threads.add(thread);
+        }
+
+        for(Thread thread: threads) {
+            thread.start();
+        }
+
+        for(Thread thread:threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+
+            }
+
+        }
+    }
     public static void recolorImage(BufferedImage originalImage, BufferedImage resultImage, int leftCorner, int topCorner,
                                     int width, int height) {
         for(int x = leftCorner ; x < leftCorner + width && x < originalImage.getWidth() ; x++) {

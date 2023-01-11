@@ -1,5 +1,8 @@
 import java.lang.reflect.Array;
 import java.math.BigInteger;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -7,7 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Main<T> {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnknownHostException {
         System.out.println("Hello world!");
         run();
 
@@ -25,6 +28,8 @@ public class Main<T> {
 
         BigInteger result = multithreadedCalculation.calculateResult(BigInteger.valueOf(3), BigInteger.valueOf(2), BigInteger.valueOf(2), BigInteger.valueOf(4));
         Utils.print(result);
+
+        Utils.print("Address is " + InetAddress.getByAddress(new byte[]{127,0,0,1}).getCanonicalHostName() );
     }
 
     public static void run() {
@@ -35,11 +40,6 @@ public class Main<T> {
         greeter.run();
 
         stream();
-    }
-
-    public static void methodReferences() {
-        List<Integer> intList = Arrays.asList(1,2,3);
-        intList.forEach(System.out::println);
     }
 
     public static <T> void methodReferences1(ArrayList<T> arrayList) {
